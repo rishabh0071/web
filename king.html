@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>saving ball</title>
+    </head>
+    <style>
+        body {
+    background-color:black;
+    color:white;
+}
+
+svg{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+}
+
+#pointer{
+    r:1%;
+    fill:#5bf;
+}
+
+#test{
+    position:absolute;
+    top:0;
+    left:0;
+    background-color:#0008;
+}
+    </style>
+
+
+    <script>
+        var d=confirm("Are you RISHABH MAHAJAN?");
+        if(d)
+        {
+            alert("WELCOME RISHABH");
+        }
+       else
+       {
+           alert("so you are rishabh's friend");
+       }
+    var delay = 10;
+
+var wh = parseFloat(window.innerHeight);
+var ww = parseFloat(window.innerWidth);
+var pointer;
+var rad = ww/8;
+
+
+var patterns = [
+    [[],[]],
+    [[],[1],[]],
+    [[],[2],[]],
+    [[],[3],[]],
+    [[],[4],[]],
+    [[],[1,3],[]],
+    [[],[2,4],[]],
+    [[1],[2],[3],[4]],
+    [[1],[4],[3],[2]],
+    [[1,3],[4,2],[3,1],[2,4]],
+    [[],[1],[2],[1],[2],[4],[3],[4],[3],[],[1,2],[4,3]],
+    [[],[3],[2],[3],[2],[4],[1],[4],[1],[],[3,2],[4,1]],
+    [[],[1,2],[3,4],[2,3],[1,4],[]],
+    [[],[],[4],[1,2,3]],
+    [[],[],[2],[1,3,4]],
+    [[],[1,2,3],[2,3,4],[3,4,1],[4,1,2]],
+    [[],[],[2],[2],[4],[4],[1],[3],[1],[3],[],[]],
+    ]
+
+var walls = [];
+var game;
+
+window.onload = async () =>{
+    var elt = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    elt.setAttribute("cx","50%");
+    elt.setAttribute("cy","50%");
+    elt.setAttribute("r",rad);
+    elt.setAttribute("stroke","#aaa");
+    elt.setAttribute("fill","none");
+        
+    svg.appendChild(elt);
+    
+    pointer = document.getElementById("pointer");
+    
+    startTime = Date.now();
+    timer();
+    game = true;
+    movePointerTo(0,0*wh/2);
+    gameOn();
+}
+
+async function timer(){
+    var ms = Date.now()-startTime;
+    var s = Math.floor(ms/1000);
+    var mn = Math.floor(s/60);
+    test.innerText = mn+":"+
+        ("0"+(s-mn*60)).slice(-2)+":"+
+        ("00"+(ms-s*1000)).slice(-3);
+    await wait(0);
+    if(game){
+        timer();
+    }
+}
+
+async function gameOn(){
+    var pat = patterns[random(0,patterns.length)];
+    for(var step of pat){
+        for(var i of step){
+            new Wall(i);
+        }
+        await wait(50*delay);
+    }
+    
+    if(game){
+        gameOn();
+    }
+}
+
+function gameOff(){
+    game = false;
+}
+
+class Wall{
+    constructor(s){
+        this.s = s;
+        
+        this.elt = document.createElementNS("http://www.w3.org/2000/svg","rect");
+        this.elt.setAttribute("fill","#888");
+        
+        switch(s){
+            case 1:
+                this.x = -ww/10;
+                this.y = 0;
+                this.h = wh;
+                this.w = ww/10;
+                break;
+            
+            case 2:
+                this.x = 0;
+                this.y = -wh/10;
+                this.h = wh/10;
+                this.w = ww;
+                break;
+            
+            case 3:
+                this.x = ww;
+                this.y = 0;
+                this.h = wh;
+                this.w = ww/10;
+                break;
+            
+            case 4:
+                this.x = 0;
+                this.y = wh;
+                this.h = wh/10;
+                this.w = ww;
+                break;
+            
+        }
+        
+        this.draw();
+        
+        svg.appendChild(this.elt);
+        
+        //walls.push(this);
+        
+        this.move();
+    }
+    
+    async move(){
+        var step = 500;
+        switch(this.s){
+            case 1:
+                this.x += ww*1.2/step;
+                this.y += wh/step;
+                this.h -= wh/step*2;
+                this.w -= ww/10/step*2;
+                break;
+            
+            case 2:
+                this.x += ww/step;
+                this.y += wh*1.2/step;
+                this.h -= wh/10/step*2;
+                this.w -= ww/step*2;
+                break;
+            
+            case 3:
+                this.x += -ww/step;
+                this.y += wh/step;
+                this.h -= wh/step*2;
+                this.w -= ww/10/step*2;
+                break;
+            
+            case 4:
+                this.x += ww/step;
+                this.y -= wh/step;
+                this.h -= wh/10/step*2;
+                this.w -= ww/step*2;
+                break;
+            
+        }
+        
+        if(this.w<=0 || this.h<=0){
+            svg.removeChild(this.elt);
+            return;
+        }
+       
+        this.draw();
+        await wait(delay);
+        this.checkColision();
+        
+        if(game){
+            this.move();
+        }
+        
+    }
+    
+    draw(){
+        this.elt.setAttribute("x",this.x);
+        this.elt.setAttribute("y",this.y);
+        this.elt.setAttribute("height",this.h);
+        this.elt.setAttribute("width",this.w);
+    }
+    
+    checkColision(){
+        var ptrX = parseFloat(pointer.getAttribute("cx"));
+        var ptrY = parseFloat(pointer.getAttribute("cy"));
+        
+        if( ptrX>this.x && ptrX<(this.x+this.w)
+         && ptrY>this.y && ptrY<(this.y+this.h)){
+             this.elt.setAttribute("fill","red");
+             gameOff();
+        }
+    }
+}
+
+function movePointerTo(x,y){
+    if(!game){
+         return;
+    }
+    var angle;
+    if(x>ww/2){
+        angle = Math.atan((y-wh/2)/(x-ww/2));
+    }else{
+        angle = Math.PI+Math.atan((y-wh/2)/(x-ww/2));
+    }
+    pointer.setAttribute("cx",(ww/2+rad*Math.cos(angle)));
+    pointer.setAttribute("cy",(wh/2+rad*Math.sin(angle)));
+}
+
+window.ontouchstart = (e) =>{
+    movePointerTo(e.touches[0].clientX
+                 ,e.touches[0].clientY);
+}
+
+window.ontouchmove = (e) =>{
+    movePointerTo(e.touches[0].clientX
+                 ,e.touches[0].clientY);
+}
+
+window.onmousemove = (e) =>{
+    movePointerTo(e.clientX
+                 ,e.clientY);
+}
+
+function wait (timeout) {
+    return new Promise(function(resolve, reject) {
+        setTimeout(function() {
+            resolve();
+        }, timeout);
+    });
+}
+
+const random = (min=0,max=1) => Math.floor( Math.random()*(max-min)+min );
+
+function randomColor(){
+    var r = random(10,256);
+    var g = random(10,256);
+    var b = random(10,256);
+    return "rgb("+r+","+g+","+b+")";
+}
+
+
+    </script>
+    
+    
+    
+    
+    
+    
+    
+    
+    <body>
+ <svg id=svg>
+            <circle id=pointer></circle>
+        </svg>
+        <p id=test>test</p>
+    </body>
+</html>
